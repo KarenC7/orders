@@ -1,13 +1,11 @@
 package com.ecommerce.orders.model;
 
-
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,26 +14,25 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
+import java.util.List;
 
 @Entity
-@Table(name = "order_items")
+@Table(name = "order_headers")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Order {
+public class OrderHeader {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private Long customerId;
+    private LocalDateTime orderDate;
+    private LocalDateTime orderShipment; // initially null
+    private LocalDateTime orderDelivery; // initially null
+    private BigDecimal totalOrder;
+    private String status;
 
-    private Long productId;
-    private Integer quantity;
-    private BigDecimal pricePerProduct; // price per product gotten from API
-    private BigDecimal totalPrice;      // quantity * pricePerProduct
-    private LocalDateTime createdAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_header_id")
-    private OrderHeader orderHeader;
+    @OneToMany(mappedBy = "orderHeader", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Order> orderItems;
 }

@@ -1,12 +1,19 @@
 package com.ecommerce.orders.controller;
-
 import com.ecommerce.orders.dto.OrderDto;
 import com.ecommerce.orders.service.OrderService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
@@ -17,35 +24,29 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    // Realizar un order
+    @Operation(summary = "Create an order item")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Created successfully"),
+            @ApiResponse(responseCode = "403", description = "Invalid token")
+    })
     @PostMapping
     public ResponseEntity<OrderDto> createOrder(@RequestBody OrderDto orderDto) {
-        log.info("Received request to create order");
+        log.info("Received request to create order item");
         OrderDto createdOrder = orderService.createOrder(orderDto);
         return ResponseEntity.ok(createdOrder);
     }
 
-    // Get an order by ID
-    @GetMapping("/{orderId}")
-    public ResponseEntity<OrderDto> getOrderById(@PathVariable Long orderId) {
-        log.info("Received request to get order with id {}", orderId);
+    @Operation(summary = "Get an order item")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Created successfully"),
+            @ApiResponse(responseCode = "403", description = "Invalid token")
+    })
+    @GetMapping("/{orderItemId}")
+    public ResponseEntity<OrderDto> getOrderItemById(@PathVariable Long orderId) {
+        log.info("Received request to get order item with id {}", orderId);
         OrderDto orderDto = orderService.getOrderById(orderId);
         return ResponseEntity.ok(orderDto);
     }
 
-    // Actualizar el estado de un order
-    @PatchMapping("/{orderId}/status")
-    public ResponseEntity<OrderDto> updateOrderStatus(@PathVariable Long orderId, @RequestBody String status) {
-        log.info("Received request to update order {} status to {}", orderId, status);
-        OrderDto updatedOrder = orderService.updateOrderStatus(orderId, status);
-        return ResponseEntity.ok(updatedOrder);
-    }
 
-    // Obtener orders por ID de cliente
-    @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<OrderDto>> getOrdersByCustomerId(@PathVariable Long customerId) {
-        log.info("Received request to get orders for customer id {}", customerId);
-        List<OrderDto> orders = orderService.getOrdersByCustomerId(customerId);
-        return ResponseEntity.ok(orders);
-    }
 }
