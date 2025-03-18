@@ -1,5 +1,6 @@
 package com.ecommerce.orders.dto;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,7 +16,9 @@ public class OrderDto {
     private Long customerId;
     private Long productId;
     private Integer quantity;
-    private BigDecimal price;
+    private BigDecimal pricePerProduct;
+    private BigDecimal totalPrice;
     private String status;
     private LocalDateTime createdAt;
+
 }
