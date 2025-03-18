@@ -3,6 +3,9 @@ package com.ecommerce.orders.controller;
 import com.ecommerce.orders.dto.AuthenticationRequestDto;
 import com.ecommerce.orders.dto.AuthenticationResponseDto;
 import com.ecommerce.orders.util.JwtUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,6 +29,11 @@ public class AuthenticationController {
         this.jwtUtil = jwtUtil;
     }
 
+    @Operation(summary = "Authenticate user and return JWT token")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User authenticated successfully"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
     @PostMapping("/login")
     public AuthenticationResponseDto login(@RequestBody AuthenticationRequestDto request) {
         log.info("Login attempt for user: {}", request.getUsername());

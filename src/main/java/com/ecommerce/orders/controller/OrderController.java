@@ -1,6 +1,9 @@
 package com.ecommerce.orders.controller;
 import com.ecommerce.orders.dto.OrderDto;
 import com.ecommerce.orders.service.OrderService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +24,11 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    // Create an order item
+    @Operation(summary = "Create an order item")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Created successfully"),
+            @ApiResponse(responseCode = "403", description = "Invalid token")
+    })
     @PostMapping
     public ResponseEntity<OrderDto> createOrder(@RequestBody OrderDto orderDto) {
         log.info("Received request to create order item");
@@ -29,7 +36,11 @@ public class OrderController {
         return ResponseEntity.ok(createdOrder);
     }
 
-    // Get an order item by ID
+    @Operation(summary = "Get an order item")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Created successfully"),
+            @ApiResponse(responseCode = "403", description = "Invalid token")
+    })
     @GetMapping("/{orderItemId}")
     public ResponseEntity<OrderDto> getOrderItemById(@PathVariable Long orderId) {
         log.info("Received request to get order item with id {}", orderId);
@@ -37,19 +48,5 @@ public class OrderController {
         return ResponseEntity.ok(orderDto);
     }
 
-    // Update order item status
-    @PatchMapping("/{orderItemId}/status")
-    public ResponseEntity<OrderDto> updateOrderItemStatus(@PathVariable Long orderItemId, @RequestBody String status) {
-        log.info("Received request to update order item {} status to {}", orderItemId, status);
-        OrderDto updatedOrder = orderService.updateOrderStatus(orderItemId, status);
-        return ResponseEntity.ok(updatedOrder);
-    }
 
-    // Get order items by customer ID
-    @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<OrderDto>> getOrderItemsByCustomerId(@PathVariable Long customerId) {
-        log.info("Received request to get order items for customer id {}", customerId);
-        List<OrderDto> orderItems = orderService.getOrdersByCustomerId(customerId);
-        return ResponseEntity.ok(orderItems);
-    }
 }

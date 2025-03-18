@@ -1,10 +1,12 @@
 package com.ecommerce.orders.util;
 
 
+import com.ecommerce.orders.exception.JwtSignatureException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -15,9 +17,9 @@ import java.util.Date;
 @Slf4j
 public class JwtUtil {
 
-    // Generate a secure key for HS512 (512 bits)
+    // Generamos una clave segura para HS512
     private final SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
-    private final long jwtExpirationMs = 86400000; // 24 hours for authentication
+    private final long jwtExpirationMs = 86400000; // 24 horas
 
     public String generateJwtToken(String username) {
         log.info("Generating JWT token for user: {}", username);
@@ -25,7 +27,7 @@ public class JwtUtil {
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(key) // use the generated key
+                .signWith(key)
                 .compact();
     }
 
@@ -45,9 +47,12 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token);
             return true;
+        } catch (SignatureException e) {
+            log.error("JWT signature does not match locally computed signature: {}", e.getMessage());
+            throw new JwtSignatureException("JWT signature does not match locally computed signature. JWT validity cannot be asserted and should not be trusted.", e);
         } catch (JwtException | IllegalArgumentException e) {
             log.error("Invalid JWT token: {}", e.getMessage());
+            throw new JwtSignatureException("Invalid JWT token", e);
         }
-        return false;
     }
 }

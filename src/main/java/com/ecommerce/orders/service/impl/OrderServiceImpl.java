@@ -31,7 +31,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDto createOrder(OrderDto orderDto) {
-        log.info("Creating order item for customer {} with product {}", orderDto.getCustomerId(), orderDto.getProductId());
+        log.info("Creating order item with product {}", orderDto.getProductId());
 
         // Validate that the product exists and get its price
         var productDto = fakeStoreApiClient.getProductById(orderDto.getProductId());
@@ -43,7 +43,6 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal pricePerProduct = BigDecimal.valueOf(productDto.getPrice());
         Integer quantity = orderDto.getQuantity();
         BigDecimal totalPrice = pricePerProduct.multiply(BigDecimal.valueOf(quantity));
-        String status = orderDto.getStatus() != null ? orderDto.getStatus() : "PENDING";
 
         // Determine OrderHeader: if provided use it; otherwise, create a new one.
         OrderHeader orderHeader;
@@ -57,12 +56,10 @@ public class OrderServiceImpl implements OrderService {
 
         // Create OrderItem
         Order order = Order.builder()
-                .customerId(orderDto.getCustomerId())
                 .productId(orderDto.getProductId())
                 .quantity(quantity)
                 .pricePerProduct(pricePerProduct)
                 .totalPrice(totalPrice)
-                .status(status)
                 .createdAt(LocalDateTime.now())
                 .orderHeader(orderHeader)
                 .build();
@@ -90,33 +87,14 @@ public class OrderServiceImpl implements OrderService {
         return mapToDto(order);
     }
 
-    @Override
-    @Transactional
-    public OrderDto updateOrderStatus(Long orderId, String status) {
-        log.info("Updating order item {} status to {}", orderId, status);
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("Order item not found with id: " + orderId));
-        order.setStatus(status);
-        order = orderRepository.save(order);
-        return mapToDto(order);
-    }
-
-    @Override
-    public List<OrderDto> getOrdersByCustomerId(Long customerId) {
-        log.info("Retrieving order items for customer id {}", customerId);
-        List<Order> orderItems = orderRepository.findByCustomerId(customerId);
-        return orderItems.stream().map(this::mapToDto).collect(Collectors.toList());
-    }
 
     private OrderDto mapToDto(Order orderItem) {
         return new OrderDto(
                 orderItem.getId(),
-                orderItem.getCustomerId(),
                 orderItem.getProductId(),
                 orderItem.getQuantity(),
                 orderItem.getPricePerProduct(),
                 orderItem.getTotalPrice(),
-                orderItem.getStatus(),
                 orderItem.getCreatedAt()
 
         );

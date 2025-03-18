@@ -13,12 +13,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class OrderDto {
     private Long id;
-    private Long customerId;
     private Long productId;
     private Integer quantity;
     private BigDecimal pricePerProduct;
     private BigDecimal totalPrice;
-    private String status;
     private LocalDateTime createdAt;
 
 }

@@ -29,12 +29,10 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long customerId;
     private Long productId;
     private Integer quantity;
     private BigDecimal pricePerProduct; // price per product gotten from API
     private BigDecimal totalPrice;      // quantity * pricePerProduct
-    private String status;
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)

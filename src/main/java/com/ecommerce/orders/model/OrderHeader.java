@@ -26,14 +26,12 @@ public class OrderHeader {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    private Long customerId;
     private LocalDateTime orderDate;
-
     private LocalDateTime orderShipment; // initially null
-
     private LocalDateTime orderDelivery; // initially null
-
     private BigDecimal totalOrder;
+    private String status;
 
     @OneToMany(mappedBy = "orderHeader", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orderItems;

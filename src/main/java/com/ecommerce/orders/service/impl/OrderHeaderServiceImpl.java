@@ -2,6 +2,7 @@ package com.ecommerce.orders.service.impl;
 
 import com.ecommerce.orders.adapter.FakeStoreApiClient;
 import com.ecommerce.orders.dto.OrderDto;
+import com.ecommerce.orders.exception.InvalidOrderException;
 import com.ecommerce.orders.model.Order;
 import com.ecommerce.orders.model.OrderHeader;
 import com.ecommerce.orders.dto.OrderHeaderDto;
@@ -31,19 +32,21 @@ public class OrderHeaderServiceImpl implements OrderHeaderService {
 
     @Override
     @Transactional
-    public OrderHeaderDto createOrderHeader(OrderHeaderDto dto) {
-        log.info("Creating order header with {} order items", dto.getOrderItems().size());
+    public OrderHeaderDto createOrderHeader(OrderHeaderDto headerDto) {
+        log.info("Creating order header with {} order items", headerDto.getOrderItems().size());
         // Create new OrderHeader with current orderDate; orderShipment and orderDelivery come from dto (or null)
         OrderHeader header = OrderHeader.builder()
+                .customerId(headerDto.getCustomerId())
                 .orderDate(LocalDateTime.now())
                 .totalOrder(BigDecimal.ZERO)
+                .status(headerDto.getStatus() != null ? headerDto.getStatus() : "PENDING")
                 .build();
         header = orderHeaderRepository.save(header);
 
         List<Order> createdItems = new ArrayList<>();
         BigDecimal totalOrderSum = BigDecimal.ZERO;
         // Process each OrderItemCreateDto
-        for (OrderDto itemDto : dto.getOrderItems()) {
+        for (OrderDto itemDto : headerDto.getOrderItems()) {
             // Validate that the product exists and get its price
             var productDto = fakeStoreApiClient.getProductById(itemDto.getProductId());
             if (productDto == null) {
@@ -52,12 +55,10 @@ public class OrderHeaderServiceImpl implements OrderHeaderService {
             BigDecimal pricePerProduct = BigDecimal.valueOf(productDto.getPrice());
             BigDecimal totalPrice = pricePerProduct.multiply(BigDecimal.valueOf(itemDto.getQuantity()));
             Order item = Order.builder()
-                    .customerId(itemDto.getCustomerId())
                     .productId(itemDto.getProductId())
                     .quantity(itemDto.getQuantity())
                     .pricePerProduct(pricePerProduct)
                     .totalPrice(totalPrice)
-                    .status(itemDto.getStatus() != null ? itemDto.getStatus() : "PENDING")
                     .createdAt(LocalDateTime.now())
                     .orderHeader(header)
                     .build();
@@ -79,24 +80,49 @@ public class OrderHeaderServiceImpl implements OrderHeaderService {
         return mapToDto(header);
     }
 
+    @Override
+    @Transactional
+    public OrderHeaderDto updateOrderHeaderStatus(Long orderId, String status) {
+        log.info("Updating order item {} status to {}", orderId, status);
+        OrderHeader orderHeader = orderHeaderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order item not found with id: " + orderId));
+        orderHeader.setStatus(status);
+        if(status.equals("SHIPMENT")) {
+            orderHeader.setOrderShipment(LocalDateTime.now());
+        }else if(status.equals("DELIVERY")) {
+            orderHeader.setOrderDelivery(LocalDateTime.now());
+        }else {
+            throw new InvalidOrderException("Invalid Status: " + status);
+        }
+            orderHeader = orderHeaderRepository.save(orderHeader);
+        return mapToDto(orderHeader);
+    }
+
+    @Override
+    public List<OrderHeaderDto> getOrdersByCustomerId(Long customerId) {
+        log.info("Retrieving order items for customer id {}", customerId);
+        List<OrderHeader> orderItems = orderHeaderRepository.findByCustomerId(customerId);
+        return orderItems.stream().map(this::mapToDto).collect(Collectors.toList());
+    }
+
     private OrderHeaderDto mapToDto(OrderHeader header) {
         List<OrderDto> itemDtos = header.getOrderItems() != null ?
                 header.getOrderItems().stream().map(item -> new OrderDto(
                         item.getId(),
-                        item.getCustomerId(),
                         item.getProductId(),
                         item.getQuantity(),
                         item.getPricePerProduct(),
                         item.getTotalPrice(),
-                        item.getStatus(),
                         item.getCreatedAt()
                 )).collect(Collectors.toList()) : null;
         return new OrderHeaderDto(
                 header.getId(),
+                header.getCustomerId(),
                 header.getOrderDate(),
                 header.getOrderShipment(),
                 header.getOrderDelivery(),
                 header.getTotalOrder(),
+                header.getStatus(),
                 itemDtos
         );
     }
